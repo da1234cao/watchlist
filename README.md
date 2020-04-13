@@ -92,7 +92,34 @@ def test_url_for():
 
 <br>
 
+## chapter03 模板
 
+上一章，我们视图函数是这样定义的：
+
+```python
+def hello():
+	return '<h1>Hello Totoro!</h1><img src="http://helloflask.com/totoro.gif">'
+```
+
+但是，**我们的html肯定不是一个字符串可以解决的。**
+
+所以我们得使用html文件。
+
+> 我们把包含变量和运算逻辑的 HTML 或其他格式的文本叫做模板， 执行这些变量替换和逻辑计算工作的过程被称为渲染， 这个工作由我们这一章要学习使用的模板渲染引擎——Jinja2 来完成。
+
+**我们使用render_template() 函数把模板渲染出来。**
+
+```python
+@app.route('/')
+def index():
+	return render_template('index.html', name=name, movies=movies)
+```
+
+![image-20200413220709851](README.assets/image-20200413220709851.png)
+
+<br>
+
+<br>
 
 ## 附录
 
