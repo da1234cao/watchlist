@@ -86,6 +86,8 @@ def test_url_for():
 	return 'Test page
 ```
 
+![image-20200413181735471](README.assets/image-20200413181735471.png)
+
 <br>
 
 <br>
