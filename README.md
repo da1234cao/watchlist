@@ -121,6 +121,29 @@ def index():
 
 <br>
 
+## chapter04 静态文件
+
+上一章是渲染模板。**静态文件（ static files） 和我们的模板概念相反， 指的是内容不需要动态生成的文**
+**件。 比如图片、 CSS 文件和 JavaScript 脚本等。**
+
+主要点：**生成静态URL**
+
+```html
+<img src="{{ url_for('static', filename='foo.jpg') }}">
+```
+
+其他内容是css的部分。我仅仅知道最近本的css,写出来的难看得很。我拷贝了书中的css.
+
+![image-20200414093123006](README.assets/image-20200414093123006.png)
+
+<br>
+
+<br>
+
+
+
+
+
 ## 附录
 
 [生成 GitHub README.md 目录](https://sleepeatcode.com/articles/15/generating-the-github-readme-directory)
