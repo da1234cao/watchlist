@@ -5,3 +5,6 @@ __pycache__
 
 #.env 则用来存储敏感数据， 不应该提交进Git仓库
 .env
+
+#database
+*.db

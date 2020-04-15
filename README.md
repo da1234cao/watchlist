@@ -132,7 +132,7 @@ def index():
 <img src="{{ url_for('static', filename='foo.jpg') }}">
 ```
 
-其他内容是css的部分。我仅仅知道最近本的css,写出来的难看得很。我拷贝了书中的css.
+其他内容是css的部分。我仅仅知道最基本的css,写出来的难看得很。我拷贝了书中的css.
 
 ![image-20200414093123006](README.assets/image-20200414093123006.png)
 
@@ -140,9 +140,101 @@ def index():
 
 <br>
 
+## chapter 05 数据库
+
+这章，略微有点多。
+
+**安装数据库工具+设置数据库的URI+创建数据模型+注册命令+增删该查**
+
+### 安装依赖包、连接到数据库
+
+下面用的是root用户登录。当然，最好可以用其他用户登录。
+
+参考：[mysql环境准备](https://blog.csdn.net/sinat_38816924/article/details/105478479)
+
+```shell
+#安装依赖包
+pip install flask-sqlalchemy
+pip install pymysql
+
+#设置数据库URI
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:1*******@localhost:3306/userdb'
+
+#创建数据库
+mysql> create database watchlist
+```
+
+<br>
+
+### 创建数据模型
+
+```python
+# 用户表
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)  # 主键
+    name = db.Column(db.String(20))  # 名字
 
 
+# 电影表
+class Movie(db.Model):
+    id = db.Column(db.Integer, primary_key=True)  # 主键
+    title = db.Column(db.String(60))  # 电影标题
+    year = db.Column(db.String(4))  # 电影年份
+```
 
+<br>
+
+### 增删该查
+
+```python
+#增加
+>>> from app import User, Movie # 导入模型类
+>>> user = User(name='Grey Li') # 创建一个 User 记录
+>>> m1 = Movie(title='Leon', year='1994') # 创建一个 Movie 记录
+>>> m2 = Movie(title='Mahjong', year='1996') # 再创建一个 Movie记录
+>>> db.session.add(user) # 把新创建的记录添加到数据库会话
+>>> db.session.add(m1)
+>>> db.session.add(m2)
+>>> db.session.commit() # 提交数据库会话， 只需要在最后调用一次即可
+
+#查
+>>> Movie.query.all() # 获取 Movie 模型的所有记录， 返回包含多个模型类实例的列表
+>>> Movie.query.filter(Movie.title=='Mahjong').first() # 等同于上面的查询， 但使用不同的过滤方法
+
+#更新
+>>> movie = Movie.query.get(2)
+>>> movie.title = 'WALL-E' # 直接对实例属性赋予新的值即可
+>>> movie.year = '2008'
+>>> db.session.commit() # 注意仍然需要调用这一行来提交改动
+
+#删除
+>>> movie = Movie.query.get(1)
+>>> db.session.delete(movie) # 使用 db.session.delete() 方法删除记录， 传入模型实例
+>>> db.session.commit() # 提交改动
+```
+
+<br>
+
+### 命令注册
+
+参考：[Python 命令行之旅：深入 click 之选项篇](https://www.lagou.com/lgeduarticle/69961.html)
+
+```python
+@app.cli.command()  # 注册命令
+@click.option('--drop', is_flag=True, help='create after drop')  # 设置选项
+def initdb(drop):
+    """Initialize the database."""
+    if drop:
+        db.drop_all()
+    db.create_all()
+    click.echo('Initialized database.')
+```
+
+![image-20200415092634625](README.assets/image-20200415092634625.png)
+
+<br>
+
+<br>
 
 ## 附录
 
