@@ -236,6 +236,59 @@ def initdb(drop):
 
 <br>
 
+## chapter06 模板的优化
+
+自定义错误页面+模板的上下文处理函数+模板继承
+
+#### 自定义错误页面
+
+```python
+# 定义自定义错误界面
+@app.errorhandler(404)
+def page_not_found(e):
+    user = User.query.first()
+    return render_template('404.html'), 404  # 这里是有两个返回值吗
+```
+
+<br>
+
+### 模板的上下文处理函数
+
+```python
+# 上下文处理函数
+@app.context_processor
+def inject_user():
+    user = User.query.first()
+    return dict(user=user)
+```
+
+<br>
+
+### 模板继承
+
+```html
+{% extends 'base.html' %}
+
+{% block content %}
+    <ul class="movie-list">
+    <li>
+        Page Not Found - 404
+        <span class="float-right">
+            <a href="{{ url_for('index') }}">Go Back</a>
+        </span>
+    </li>
+    </ul>
+{% endblock %}
+```
+
+![image-20200419101337847](README.assets/image-20200419101337847.png)
+
+
+
+<br>
+
+<br>
+
 ## 附录
 
 [生成 GitHub README.md 目录](https://sleepeatcode.com/articles/15/generating-the-github-readme-directory)
