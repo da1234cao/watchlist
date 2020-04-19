@@ -2,31 +2,25 @@
 
 {% block content %}
 
-<style>
-    .float-right {
-        float: right;
-    }
-    .imdb {
-        font-size: 12px;
-        font-weight: bold;
-        color: black;
-        text-decoration: none;
-        background: #F5C518;
-        border-radius: 5px;
-        padding: 3px 5px;
-    }
-</style>
-
     <p>{{ movies|length }} Titles</p>
     <ul class="movie-list">
         {% for movie in movies %}
         <li>{{ movie.title }} - {{ movie.year }}
             <span class="float-right">
+                <a class="btn" href="{{url_for('delete',  movie_id=movie.id)}}">删除</a>
+                <a class="btn" href="{{url_for('edit',  movie_id=movie.id)}}">修改</a>
                 <a class="imdb" href="https://www.imdb.com/find?q={{movie.title }}" target="_blank" title="Find this movie on IMDb">IMDb</a>
             </span>
         </li>
         {% endfor %}
     </ul>
+    <br>
+    <form method="post">
+        Name <input type="text" name="title" autocomplete="on" required>
+        Year <input type="text" name="year" autocomplete="on" required>
+        <input class="btn" type="submit" name="submit" value="Add">
+    </form>
+
     <img alt="Walking Totoro" class="totoro" src="{{ url_for('static', filename='image/totoro.gif') }}" title="to~to~ro~">
 
 {% endblock content %}

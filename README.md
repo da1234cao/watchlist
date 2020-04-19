@@ -240,7 +240,7 @@ def initdb(drop):
 
 自定义错误页面+模板的上下文处理函数+模板继承
 
-#### 自定义错误页面
+### 自定义错误页面
 
 ```python
 # 定义自定义错误界面
@@ -284,6 +284,91 @@ def inject_user():
 ![image-20200419101337847](README.assets/image-20200419101337847.png)
 
 
+
+<br>
+
+<br>
+
+## chapter 7 表单
+
+表单的显现+表单的增删**改**。
+
+其中最重要的是改。
+
+### 显示
+
+```python
+    user = User.query.first()  # 读取第一个用户信息 --》用于base.html
+    movies = Movie.query.all()  # 读取所有电影
+    return render_template('index.html', user=user, movies=movies)
+```
+
+<br>
+
+### 删除
+
+删除是最简单的操作。
+
+```html
+<!-- html中增加一个删除按钮，传递变量movie.id -->
+ <a class="btn" href="{{url_for('edit',  movie_id=movie.id)}}">修改</a>
+```
+
+```python
+# 查询删除
+@app.route('/movie/delete/<int:movie_id>')
+def delete(movie_id):
+    movie = Movie.query.get_or_404(movie_id)  # 获取电影记录
+    db.session.delete(movie)  # 删除对应的记录
+    db.session.commit()  # 提交数据库会话
+    flash('Item deleted.')
+    return redirect(url_for('index'))  # 重定向回主页
+```
+
+<br>
+
+### 增加
+
+```html
+<!-- index.html中增加一个表格 -->   
+<form method="post">
+    Name <input type="text" name="title" autocomplete="on" required>
+    Year <input type="text" name="year" autocomplete="on" required>
+    <input class="btn" type="submit" name="submit" value="Add">
+</form>
+```
+
+```python
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/index', methods=['GET', 'POST'])
+def index():
+    if request.method == "POST":
+        title = request.form.get('title')
+        year = request.form.get('year')
+        if not title or not year or len(year) > 4 or len(title) > 60:
+            flash('Invalid input.')  # 显示错误提示
+            return redirect(url_for('index'))  # 重定向回主页
+        movie = Movie(title=title, year=year)
+        db.session.add(movie)
+        db.session.commit()
+        flash('Item created.')  # 显示成功创建的提示
+        return redirect(url_for('index'))  # 重定向回主页,url改变，调用get方法
+        # return render_template('index.html') #url不变，这时候渲染，没有获取到user,movie的值
+
+    user = User.query.first()  # 读取第一个用户信息 --》用于base.html
+    movies = Movie.query.all()  # 读取所有电影
+    return render_template('index.html', user=user, movies=movies)
+```
+
+<br>
+
+### 修改
+
+**修改是表格中一个难点**。当时思考的时候，画了个图。懒得整理，就它吧。
+
+![edit](README.assets/edit-1587310076178.jpg)
+
+![image-20200419233011396](README.assets/image-20200419233011396.png)
 
 <br>
 

@@ -1,4 +1,4 @@
-from flask import Flask, url_for, render_template
+from flask import Flask, url_for, render_template, request, flash, redirect
 
 from flask_sqlalchemy import SQLAlchemy
 
@@ -10,6 +10,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('mysql_connect')
 db = SQLAlchemy(app)  # 初始化扩展， 传入程序实例 app
 
+app.config['SECRET_KEY'] = 'dev'
 
 # 清空数据库中的表，表结构保留
 @app.cli.command()  # 注册命令
@@ -27,16 +28,11 @@ def initdb():
 
     name = "dacao"
     movies = [
-        {'title': 'My Neighbor Totoro', 'year': '1988'},
-        {'title': 'Dead Poets Society', 'year': '1989'},
-        {'title': 'A Perfect World', 'year': '1993'},
-        {'title': 'Leon', 'year': '1994'},
-        {'title': 'Mahjong', 'year': '1996'},
-        {'title': 'Swallowtail Butterfly', 'year': '1996'},
-        {'title': 'King of Comedy', 'year': '1999'},
-        {'title': 'Devils on the Doorstep', 'year': '1999'},
-        {'title': 'WALL-E', 'year': '2008'},
-        {'title': 'The Pork of Music', 'year': '2012'},
+        {'title': '三毛流浪记', 'year': '1949'},
+        {'title': '航海王', 'year': '1999'},
+        {'title': 'The Shawshank Redemption', 'year': '1994'},
+        {'title': '父母爱情', 'year': '2012'},
+        {'title': '美丽人生', 'year': '1997'},
     ]
 
     user = User(name=name)
@@ -77,9 +73,51 @@ def page_not_found(e):
     return render_template('404.html'), 404  # 这里是有两个返回值吗
 
 
-@app.route('/')
-@app.route('/index')
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/index', methods=['GET', 'POST'])
 def index():
-    user = User.query.first()  # 读取第一个用户信息
+    if request.method == "POST":
+        title = request.form.get('title')
+        year = request.form.get('year')
+        if not title or not year or len(year) > 4 or len(title) > 60:
+            flash('Invalid input.')  # 显示错误提示
+            return redirect(url_for('index'))  # 重定向回主页
+        movie = Movie(title=title, year=year)
+        db.session.add(movie)
+        db.session.commit()
+        flash('Item created.')  # 显示成功创建的提示
+        return redirect(url_for('index'))  # 重定向回主页,url改变，调用get方法
+        # return render_template('index.html') #url不变，这时候渲染，没有获取到user,movie的值
+
+    user = User.query.first()  # 读取第一个用户信息 --》用于base.html
     movies = Movie.query.all()  # 读取所有电影
     return render_template('index.html', user=user, movies=movies)
+
+
+# 修改
+@app.route('/movie/edit/<int:movie_id>', methods=['GET', 'POST'])
+def edit(movie_id):
+    movie = Movie.query.get_or_404(movie_id)
+    if request.method == "POST":
+        title = request.form['title']
+        year = request.form['year']
+        if not title or not year or len(year) > 4 or len(title)> 60:
+            flash('Invalid input.')
+            return redirect(url_for('edit', movie_id=movie_id))
+        movie.title = title  # 更新标题
+        movie.year = year  # 更新年份
+        db.session.commit()  # 提交数据库会话
+        flash('Item updated.')
+        return redirect(url_for('index'))  # 重定向回主页
+
+    return render_template('edit.html', movie=movie)
+
+
+# 删除
+@app.route('/movie/delete/<int:movie_id>')
+def delete(movie_id):
+    movie = Movie.query.get_or_404(movie_id)  # 获取电影记录
+    db.session.delete(movie)  # 删除对应的记录
+    db.session.commit()  # 提交数据库会话
+    flash('Item deleted.')
+    return redirect(url_for('index'))  # 重定向回主页

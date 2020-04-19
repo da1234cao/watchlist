@@ -36,6 +36,11 @@
 </head>
 <body>
     {% block fonter%}
+
+    {% for message in get_flashed_messages() %}
+        <div class="alert">{{ message }}</div>
+    {% endfor %}
+
     <h2>
         <img alt="dog" class="dog" src="{{url_for('static', filename="image/dog.jpg")}}">
         {{ user.name }}'s Watchlist
