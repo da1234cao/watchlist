@@ -1,16 +1,20 @@
+import click
+import os
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask import Flask, url_for, render_template, request, flash, redirect
-
 from flask_sqlalchemy import SQLAlchemy
 
-import click, os
-
 app = Flask(__name__)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
 
 # 数据库的连接配置放在.env文件中。
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('mysql_connect')
 db = SQLAlchemy(app)  # 初始化扩展， 传入程序实例 app
 
 app.config['SECRET_KEY'] = 'dev'
+
 
 # 清空数据库中的表，表结构保留
 @app.cli.command()  # 注册命令
@@ -26,7 +30,9 @@ def initdb():
     db.drop_all()
     db.create_all()
 
-    name = "dacao"
+    user = User(name="dacao", username="dacao")
+    user.set_password("1735505")
+
     movies = [
         {'title': '三毛流浪记', 'year': '1949'},
         {'title': '航海王', 'year': '1999'},
@@ -35,7 +41,6 @@ def initdb():
         {'title': '美丽人生', 'year': '1997'},
     ]
 
-    user = User(name=name)
     db.session.add(user)
 
     for m in movies:
@@ -47,9 +52,17 @@ def initdb():
 
 
 # 用户表
-class User(db.Model):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)  # 主键
     name = db.Column(db.String(20))  # 名字
+    username = db.Column(db.String(20))  # 用户名
+    password_hash = db.Column(db.String(128))
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def validate_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
 
 # 电影表
@@ -77,6 +90,8 @@ def page_not_found(e):
 @app.route('/index', methods=['GET', 'POST'])
 def index():
     if request.method == "POST":
+        if not current_user.is_authenticated:
+            return redirect(url_for('login'))
         title = request.form.get('title')
         year = request.form.get('year')
         if not title or not year or len(year) > 4 or len(title) > 60:
@@ -96,12 +111,13 @@ def index():
 
 # 修改
 @app.route('/movie/edit/<int:movie_id>', methods=['GET', 'POST'])
+@login_required
 def edit(movie_id):
     movie = Movie.query.get_or_404(movie_id)
     if request.method == "POST":
         title = request.form['title']
         year = request.form['year']
-        if not title or not year or len(year) > 4 or len(title)> 60:
+        if not title or not year or len(year) > 4 or len(title) > 60:
             flash('Invalid input.')
             return redirect(url_for('edit', movie_id=movie_id))
         movie.title = title  # 更新标题
@@ -115,9 +131,87 @@ def edit(movie_id):
 
 # 删除
 @app.route('/movie/delete/<int:movie_id>')
+@login_required
 def delete(movie_id):
     movie = Movie.query.get_or_404(movie_id)  # 获取电影记录
     db.session.delete(movie)  # 删除对应的记录
     db.session.commit()  # 提交数据库会话
     flash('Item deleted.')
     return redirect(url_for('index'))  # 重定向回主页
+
+
+# 管理员
+@app.cli.command()
+@click.option('--username', prompt=True, help='The usename used to login.')
+@click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True, help='The password used to login.')
+def admin(username, password):
+    user = User.query.first()
+    if user is not None:
+        click.echo('updating user...')
+        user.username = username
+        user.password = password
+    else:
+        click.echo('creating user...')
+        user = User(username=username, name='Admin')
+        user.set_password(password)
+        db.session.add(user)
+
+    db.session.commit()
+    click.echo('Done.')
+
+
+# 回调函数
+@login_manager.user_loader
+def load_user(user_id):
+    user = User.query.get(int(user_id))
+    return user
+
+
+# 登录
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        if not username or not password:
+            flash('Invalid input')
+            return redirect(url_for(login))
+
+        user = User.query.first()
+
+        if username == user.username and user.validate_password(password):
+            login_user(user)
+            flash('login success')
+            return redirect(url_for('index'))
+
+        flash('Invalid username or password')
+        return redirect(url_for('login'))
+    return render_template('login.html')
+
+
+# 登出
+@app.route('/logout')
+def logout():
+    logout_user()
+    flash('Goodbye')
+    return redirect(url_for('index'))
+
+
+# 用户修改
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    if request.method == 'POST':
+        name = request.form['name']
+
+        if not name or len(name) > 20:
+            flash('Invalid input')
+            return redirect(url_for('settings.html'))
+
+        current_user.name = name
+        db.session.commit()
+        flash('Settings updated.')
+        return redirect(url_for('index'))
+
+    return render_template('settings.html')

@@ -374,6 +374,85 @@ def index():
 
 <br>
 
+## chapter8 用户认证
+
+**使用 Flask-Login 实现用户认证**
+
+不知道对不对：**login_user**（user）将用户信息存入session ---> **load_user**(user_id)根据用户信息的id,做相关的操作，最后将user对象赋给current_user这个全局对象 ---> **current_user.is_authenticated** 很轻松判断用户是否认证 ---》在html中根据是否认证**{% if current_user.is_authenticated %}**，给出不同的页面。
+
+### 准备
+
+login_manager = **LoginManager**(app) # 实例化扩展类
+
+**load_user**返回的user对象赋给current_user这个全局对象。
+
+继承**UserMixin**这个类会让 User 类拥有几个用于判断认证状态的属性和方法， 其中最常用的是 is_authenticated 属性： 如果当前用户已经登录， 那么**current_user.is_authenticated 会返回 True** ， 否则返回 False 。 有了
+current_user 变量和这几个验证方法和属性， **我们可以很轻松的判断当前用户的认证状态**。
+
+```python
+from flask_login import LoginManager
+login_manager = LoginManager(app) # 实例化扩展类
+
+@login_manager.user_loader
+def load_user(user_id): # 创建用户加载回调函数， 接受用户 ID 作为参数
+	user = User.query.get(int(user_id)) # 用 ID 作为 User 模型的主键查询对应的用户
+	return user # 返回用户对象
+
+from flask_login import UserMixin
+class User(db.Model, UserMixin):
+```
+
+<br>
+
+### 登录
+
+用户的用户名密码验证通过之后，我们可以使用**login_user**（user）来使用户登录。`login_user()`方法会帮助你操作用户Session，并且会在请求上下文中记录用户信息。
+
+```python
+from flask_login import login_user
+
+# 验证用户名和密码是否一致
+if username == user.username and user.validate_password(assword):
+    login_user(user) # 登入用户
+    flash('Login success.')
+	return redirect(url_for('index'))
+```
+
+<br>
+
+### 登出
+
+```python
+# 登出
+@app.route('/logout')
+def logout():
+    logout_user()
+    flash('Goodbye')
+    return redirect(url_for('index'))
+```
+
+<br>
+
+### 视图保护
+
+```python
+@login_required # 登录保护
+if not current_user.is_authenticated: # 如果当前用户未认证
+```
+
+<br>
+
+### 模板保护
+
+```html
+{% if current_user.is_authenticated %}
+{% endif %}
+```
+
+![image-20200420225929291](README.assets/image-20200420225929291.png)
+
+![image-20200420225957907](README.assets/image-20200420225957907.png)
+
 ## 附录
 
 [生成 GitHub README.md 目录](https://sleepeatcode.com/articles/15/generating-the-github-readme-directory)
