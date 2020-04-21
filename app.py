@@ -18,10 +18,10 @@ app.config['SECRET_KEY'] = 'dev'
 
 # 清空数据库中的表，表结构保留
 @app.cli.command()  # 注册命令
-def cleardb(drop):
+def cleardb():
     db.drop_all()
     db.create_all()
-    click.echo('Initialized database.')
+    click.echo('Cleared database.')
 
 
 # 使用一些数据初始化数据库中表
@@ -48,7 +48,7 @@ def initdb():
         db.session.add(movie)
 
     db.session.commit()
-    click.echo("Done")
+    click.echo("Done.")
 
 
 # 用户表
@@ -101,7 +101,7 @@ def index():
         db.session.add(movie)
         db.session.commit()
         flash('Item created.')  # 显示成功创建的提示
-        return redirect(url_for('index'))  # 重定向回主页,url改变，调用get方法
+        return redirect(url_for('index'))  # 重定向回主页,url改变，调用get方法，有这行，没这行都行
         # return render_template('index.html') #url不变，这时候渲染，没有获取到user,movie的值
 
     user = User.query.first()  # 读取第一个用户信息 --》用于base.html
@@ -147,11 +147,12 @@ def delete(movie_id):
 def admin(username, password):
     user = User.query.first()
     if user is not None:
-        click.echo('updating user...')
+        click.echo('Updating user...')
         user.username = username
-        user.password = password
+        # user.password = password  ---》写错了，检测出来
+        user.set_password(password)  # 设置密码
     else:
-        click.echo('creating user...')
+        click.echo('Creating user...')
         user = User(username=username, name='Admin')
         user.set_password(password)
         db.session.add(user)
@@ -175,17 +176,18 @@ def login():
         password = request.form['password']
 
         if not username or not password:
-            flash('Invalid input')
-            return redirect(url_for(login))
+            flash('Invalid input.')
+            return redirect(url_for('login'))
+            # return redirect(url_for(login)) -->这里测试出来了，当时写错了
 
         user = User.query.first()
 
         if username == user.username and user.validate_password(password):
             login_user(user)
-            flash('login success')
+            flash('Login success.')
             return redirect(url_for('index'))
 
-        flash('Invalid username or password')
+        flash('Invalid username or password.')
         return redirect(url_for('login'))
     return render_template('login.html')
 
@@ -194,7 +196,7 @@ def login():
 @app.route('/logout')
 def logout():
     logout_user()
-    flash('Goodbye')
+    flash('Goodbye.')
     return redirect(url_for('index'))
 
 
@@ -206,8 +208,9 @@ def settings():
         name = request.form['name']
 
         if not name or len(name) > 20:
-            flash('Invalid input')
-            return redirect(url_for('settings.html'))
+            flash('Invalid input.')
+            return redirect(url_for('settings'))
+            # return redirect(url_for('settings.html')) ---》这里我当时写错了，这里检测出来
 
         current_user.name = name
         db.session.commit()

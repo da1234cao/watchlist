@@ -9,3 +9,7 @@ __pycache__
 
 #database
 *.db
+
+# 覆盖率
+htmlcov/
+.coverage
