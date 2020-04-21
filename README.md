@@ -491,6 +491,16 @@ app.test_client() 返回一个测试客户端对象， 可以用来模拟客户�
 
 <br>
 
+## chapter09 使用包组织代码
+
+如果，代码再大些，将是函数再分。用蓝图。
+
+![image-20200421220011150](README.assets/image-20200421220011150.png)
+
+<br>
+
+<br>
+
 ## 附录
 
 [生成 GitHub README.md 目录](https://sleepeatcode.com/articles/15/generating-the-github-readme-directory)

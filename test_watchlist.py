@@ -1,7 +1,9 @@
 import os
 import unittest
 
-from app import app, db, Movie, User, cleardb, initdb
+from app import app, db
+from app.models import Movie, User
+from app.commands import cleardb, initdb
 
 
 class watchlistTestCase(unittest.TestCase):
