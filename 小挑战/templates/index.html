@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <h1>dacao's message board</h1>
+    <form method="POST">
+        Name<br> <input type="text" name="name" autocomplete="on" required> <br><br>
+        Message<br> <textarea name="message" rows="3" cols="50" maxlength="128" required></textarea><br><br>
+        <input class="btn" type="submit" name="submit" value="Add">
+    </form>
+
+    {% for message in messages %}
+        <ul>
+            <li>{{ message.name }} <br>
+                # {{ message.body }} <br>
+                # {{ message.time }} <br>
+            </li>
+        </ul>
+    {% endfor%}
+
+</body>
+</html>
