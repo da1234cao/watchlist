@@ -12,8 +12,8 @@ db = SQLAlchemy(app)  # 初始化扩展， 传入程序实例 app
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
+# app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['SECRET_KEY'] = 'dev'
-
 
 # 回调函数
 @login_manager.user_loader
